@@ -17,7 +17,7 @@ export function StatusPill({ status, className }: { status: Status; className?: 
   return (
     <span
       className={cn(
-        'inline-flex h-6 shrink-0 items-center gap-1 rounded-full border px-2 text-xs font-medium',
+        'inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium',
         STYLES[status],
         className,
       )}

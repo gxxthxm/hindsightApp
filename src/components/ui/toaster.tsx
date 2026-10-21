@@ -13,7 +13,7 @@ export function Toaster() {
           key={t.id}
           duration={t.action ? 10000 : 5000}
           onOpenChange={(open) => !open && dismiss(t.id)}
-          className="pointer-events-auto flex items-start gap-3 rounded-xl border border-line-strong bg-ink p-3.5 pl-4 text-bg shadow-card data-[state=open]:animate-[toast-in_200ms_ease-out] data-[swipe=end]:animate-[fade-out_150ms_ease-in]"
+          className="pointer-events-auto flex items-start gap-3 rounded-2xl border border-white/5 bg-ink p-3.5 pl-4 text-bg shadow-lift data-[state=open]:animate-[toast-in_380ms_cubic-bezier(0.16,1,0.3,1)] data-[state=closed]:animate-[fade-out_150ms_ease-in] data-[swipe=end]:animate-[fade-out_150ms_ease-in]"
         >
           <div className="min-w-0 flex-1">
             <ToastPrimitive.Title className="text-sm font-medium">{t.title}</ToastPrimitive.Title>
@@ -40,7 +40,7 @@ export function Toaster() {
           </ToastPrimitive.Close>
         </ToastPrimitive.Root>
       ))}
-      <ToastPrimitive.Viewport className="fixed inset-x-0 bottom-20 z-[60] mx-auto flex w-full max-w-md flex-col gap-2 px-4 outline-none md:right-6 md:bottom-6 md:left-auto md:mx-0 md:px-0" />
+      <ToastPrimitive.Viewport className="fixed inset-x-0 bottom-24 z-[60] mx-auto flex w-full max-w-md flex-col gap-2 px-4 outline-none md:right-6 md:bottom-6 md:left-auto md:mx-0 md:px-0" />
     </ToastPrimitive.Provider>
   )
 }

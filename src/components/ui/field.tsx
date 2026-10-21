@@ -31,7 +31,7 @@ export function Field({
       {optional && <span className="ml-1.5 font-normal text-faint">optional</span>}
     </>
   )
-  const labelClass = 'mb-1.5 block text-sm font-medium text-ink'
+  const labelClass = 'mb-2 block text-sm font-medium text-ink'
   const Wrapper = as
   return (
     <Wrapper className={cn('min-w-0', className)}>

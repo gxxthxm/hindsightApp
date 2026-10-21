@@ -17,25 +17,27 @@ Log a decision with what you expect and how sure you are, get prompted to review
 - **Decision list**: search, status and category chips, a confidence filter, and sorting. Filters live in the URL.
 - **Decision detail**: "Then vs Now" columns, edit (in a dialog) and delete with an undo toast.
 - **Settings**: light/dark toggle, Export JSON, Reset demo data, Clear all data (with undo).
+- **Motion with intent**: page transitions, a sliding nav indicator, a swipeable review deck that springs forward, word-by-word headlines, a rolling confidence dial, sliding step transitions, a verdict burst, count-up stats and charts that draw in when scrolled into view. All of it is switched off under `prefers-reduced-motion`.
 - Responsive from 375 px (bottom tab bar) to desktop (sidebar). Keyboard navigable, visible focus rings, colour is never the only signal, and charts have text summaries for screen readers. Respects `prefers-reduced-motion`.
 
 ## Tech stack
 
-| Layer      | Choice                                                    |
-| ---------- | --------------------------------------------------------- |
-| Build      | Vite + React 19 + TypeScript (strict)                     |
-| Styling    | Tailwind CSS v4 with CSS-variable design tokens           |
-| Components | shadcn/ui-style wrappers over Radix primitives            |
-| Routing    | React Router (`HashRouter`, so no server rewrites)        |
-| State      | Zustand with `persist` → `localStorage`                   |
-| Charts     | Recharts (lazy-loaded with the Insights route)            |
-| Dates      | date-fns                                                  |
-| Icons      | lucide-react                                              |
-| Motion     | Framer Motion                                             |
-| Quality    | Vitest, ESLint (typescript-eslint, react-hooks), Prettier |
-| Deploy     | GitHub Pages via GitHub Actions                           |
+| Layer      | Choice                                                      |
+| ---------- | ----------------------------------------------------------- |
+| Build      | Vite + React 19 + TypeScript (strict)                       |
+| Styling    | Tailwind CSS v4 with CSS-variable design tokens             |
+| Type       | Instrument Serif (display), Geist (UI), Geist Mono (labels) |
+| Components | shadcn/ui-style wrappers over Radix primitives              |
+| Routing    | React Router (`HashRouter`, so no server rewrites)          |
+| State      | Zustand with `persist` → `localStorage`                     |
+| Charts     | Recharts (lazy-loaded with the Insights route)              |
+| Dates      | date-fns                                                    |
+| Icons      | lucide-react                                                |
+| Motion     | Framer Motion                                               |
+| Quality    | Vitest, ESLint (typescript-eslint, react-hooks), Prettier   |
+| Deploy     | GitHub Pages via GitHub Actions                             |
 
-No backend, no API calls, no environment variables. The production build uses `base: './'`, so it runs from any subpath. Initial JS is about 215 KB gzipped; the Insights chunk adds about 105 KB.
+No backend, no API calls, no environment variables. The production build uses `base: './'`, so it runs from any subpath. Initial JS is about 221 KB gzipped; the Insights chunk adds about 106 KB.
 
 ## Running it
 

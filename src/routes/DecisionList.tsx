@@ -1,11 +1,14 @@
+import { motion } from 'framer-motion'
 import { Plus, Search, X } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { DecisionRow } from '@/components/DecisionRow'
+import { RevealWords } from '@/components/motion'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Chip } from '@/components/ui/chip'
 import { Input, Select } from '@/components/ui/input'
+import { staggerContainer } from '@/lib/motion'
 import { getStatus, STATUS_LABEL } from '@/lib/status'
 import { CATEGORIES, type Category, type Status } from '@/lib/types'
 import { useDecisions } from '@/store/decisions'
@@ -97,13 +100,15 @@ export function DecisionList() {
   }, [decisions, q, categories, statuses, confidence, sort, now])
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-end justify-between gap-4">
+    <div className="space-y-10">
+      <header className="flex items-end justify-between gap-6">
         <div>
-          <h1 className="font-display text-3xl font-medium sm:text-4xl">Decisions</h1>
-          <p className="mt-1.5 text-muted">Everything you’ve logged, and how it turned out.</p>
+          <p className="eyebrow">The archive · {decisions.length} entries</p>
+          <h1 className="mt-4 font-display text-[46px] leading-[0.98] tracking-[-0.02em] sm:text-[68px] lg:text-[80px] [&_em]:text-accent-text">
+            <RevealWords>{['Every call, ', <em key="em">and how it went.</em>]}</RevealWords>
+          </h1>
         </div>
-        <Button asChild className="hidden sm:inline-flex">
+        <Button asChild size="lg" className="hidden shrink-0 sm:inline-flex">
           <Link to="/new">
             <Plus aria-hidden /> New
           </Link>
@@ -113,7 +118,7 @@ export function DecisionList() {
       <div className="space-y-4">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-faint"
+            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-faint"
             aria-hidden
           />
           <label htmlFor="search" className="sr-only">
@@ -125,7 +130,7 @@ export function DecisionList() {
             value={q}
             onChange={(e) => set('q', e.target.value)}
             placeholder="Search titles, reasoning, lessons…"
-            className="pl-9"
+            className="h-14 rounded-2xl pl-12 text-base"
             autoComplete="off"
           />
         </div>
@@ -227,11 +232,17 @@ export function DecisionList() {
         </Card>
       ) : (
         <Card className="overflow-hidden">
-          <ul className="divide-y divide-line">
+          <motion.ul
+            className="divide-y divide-line"
+            variants={staggerContainer}
+            custom={0.04}
+            initial="hidden"
+            animate="show"
+          >
             {results.map((d) => (
               <DecisionRow key={d.id} decision={d} now={now} />
             ))}
-          </ul>
+          </motion.ul>
         </Card>
       )}
     </div>

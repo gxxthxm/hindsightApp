@@ -10,7 +10,7 @@ import {
 } from 'recharts'
 import type { CalibrationBucket } from '@/lib/stats'
 
-const AXIS_TICK = { fill: 'var(--muted)', fontSize: 12 }
+const AXIS_TICK = { fill: 'var(--faint)', fontSize: 11, fontFamily: 'var(--font-mono)' }
 
 interface Point {
   x: number
@@ -97,8 +97,9 @@ export function CalibrationChart({ buckets }: { buckets: CalibrationBucket[] }) 
                   { x: p.x, y: p.x },
                 ]}
                 stroke="var(--accent)"
-                strokeOpacity={0.35}
+                strokeOpacity={0.3}
                 strokeWidth={2}
+                strokeDasharray="2 3"
               />
             ))}
             <Tooltip
@@ -108,7 +109,7 @@ export function CalibrationChart({ buckets }: { buckets: CalibrationBucket[] }) 
                 const p = payload?.[0]?.payload as Point | undefined
                 if (!active || !p) return null
                 return (
-                  <div className="rounded-lg border border-line bg-surface px-3 py-2 text-sm shadow-card">
+                  <div className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm shadow-lift">
                     <p className="font-medium">{p.label} confidence</p>
                     <p className="text-muted">
                       {p.count} decision{p.count === 1 ? '' : 's'} · came true {p.y}%
@@ -123,7 +124,9 @@ export function CalibrationChart({ buckets }: { buckets: CalibrationBucket[] }) 
               fillOpacity={0.9}
               stroke="var(--surface)"
               strokeWidth={2}
-              isAnimationActive={false}
+              animationBegin={300}
+              animationDuration={900}
+              animationEasing="ease-out"
             />
           </ScatterChart>
         </ResponsiveContainer>

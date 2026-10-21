@@ -1,4 +1,6 @@
+import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
+import { SOFT_SPRING } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { CountUp } from './CountUp'
 
@@ -8,7 +10,7 @@ interface StatCardProps {
   decimals?: number
   suffix?: string
   hint?: ReactNode
-  animate?: boolean
+  tone?: 'default' | 'inverse' | 'accent'
   className?: string
 }
 
@@ -18,24 +20,39 @@ export function StatCard({
   decimals = 0,
   suffix = '',
   hint,
-  animate = false,
+  tone = 'default',
   className,
 }: StatCardProps) {
   return (
-    <div
-      className={cn('rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5', className)}
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={SOFT_SPRING}
+      className={cn(
+        'relative flex flex-col overflow-hidden rounded-3xl border p-5 shadow-card transition-shadow duration-300 hover:shadow-lift sm:p-6',
+        tone === 'default' && 'border-line bg-surface',
+        tone === 'inverse' && 'border-transparent bg-ink text-bg',
+        tone === 'accent' && 'border-transparent bg-accent text-accent-ink',
+        className,
+      )}
     >
-      <p className="text-sm text-muted">{label}</p>
-      <p className="tabular mt-1.5 font-display text-3xl font-medium text-ink sm:text-4xl">
+      <p className={cn('eyebrow', tone !== 'default' && 'text-current opacity-90')}>{label}</p>
+      <p className="tabular mt-4 font-display text-[46px] leading-[0.9] sm:text-[56px]">
         {value === null ? (
-          <span className="text-faint">–</span>
-        ) : animate ? (
-          <CountUp value={value} decimals={decimals} suffix={suffix} />
+          <span className="opacity-40">–</span>
         ) : (
-          `${value.toFixed(decimals)}${suffix}`
+          <CountUp value={value} decimals={decimals} suffix={suffix} />
         )}
       </p>
-      {hint && <p className="mt-2 text-xs leading-relaxed text-muted">{hint}</p>}
-    </div>
+      {hint && (
+        <p
+          className={cn(
+            'mt-auto pt-4 text-[13px] leading-relaxed',
+            tone === 'default' ? 'text-muted' : 'opacity-90',
+          )}
+        >
+          {hint}
+        </p>
+      )}
+    </motion.div>
   )
 }

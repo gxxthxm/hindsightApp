@@ -15,7 +15,7 @@ export function DropdownMenuContent({
       <Menu.Content
         sideOffset={sideOffset}
         className={cn(
-          'z-50 min-w-56 rounded-xl border border-line bg-surface p-1.5 text-sm shadow-card',
+          'z-50 min-w-60 origin-[var(--radix-dropdown-menu-content-transform-origin)] rounded-2xl border border-line bg-surface p-1.5 text-sm shadow-lift data-[state=open]:animate-[toast-in_220ms_cubic-bezier(0.16,1,0.3,1)]',
           className,
         )}
         {...props}
@@ -42,12 +42,7 @@ export function DropdownMenuItem({
 }
 
 export function DropdownMenuLabel({ className, ...props }: ComponentProps<typeof Menu.Label>) {
-  return (
-    <Menu.Label
-      className={cn('px-2.5 pt-1.5 pb-1 text-xs font-medium text-faint', className)}
-      {...props}
-    />
-  )
+  return <Menu.Label className={cn('eyebrow px-2.5 pt-2 pb-1', className)} {...props} />
 }
 
 export function DropdownMenuSeparator({

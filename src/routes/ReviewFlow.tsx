@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns'
-import { motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react'
 import {
   useEffect,
@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ConfidenceMeter } from '@/components/ConfidenceMeter'
 import { QuadrantGrid } from '@/components/QuadrantGrid'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -18,6 +19,7 @@ import { ChoiceGroup, type Choice } from '@/components/ui/choice-group'
 import { Field } from '@/components/ui/field'
 import { Input, Textarea } from '@/components/ui/input'
 import { confidenceLabel } from '@/lib/confidence'
+import { EASE, SPRING } from '@/lib/motion'
 import { dueQueue } from '@/lib/status'
 import { QUADRANT_BLURB, quadrantFor, type Quadrant } from '@/lib/stats'
 import type { Decision, Happened, Rating } from '@/lib/types'
@@ -69,8 +71,10 @@ export function ReviewFlow() {
 function Stepper({ decision, onDone }: { decision: Decision; onDone: (q: Quadrant) => void }) {
   const uid = useId()
   const navigate = useNavigate()
+  const reduced = useReducedMotion()
   const submitReview = useDecisions((s) => s.submitReview)
   const [step, setStep] = useState(0)
+  const [dir, setDir] = useState(1)
   const [draft, setDraft] = useState<Draft>({ whatHappened: '', lesson: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -81,7 +85,7 @@ function Stepper({ decision, onDone }: { decision: Decision; onDone: (q: Quadran
       firstRender.current = false
       return
     }
-    headingRef.current?.focus()
+    headingRef.current?.focus({ preventScroll: true })
   }, [step])
 
   const update = (patch: Partial<Draft>) => {
@@ -110,7 +114,10 @@ function Stepper({ decision, onDone }: { decision: Decision; onDone: (q: Quadran
 
   const next = () => {
     if (!validateStep()) return
-    if (step < 2) return setStep(step + 1)
+    if (step < 2) {
+      setDir(1)
+      return setStep(step + 1)
+    }
     const { outcomeQuality, decisionQuality, happened } = draft
     submitReview(decision.id, {
       whatHappened: draft.whatHappened.trim(),
@@ -124,6 +131,7 @@ function Stepper({ decision, onDone }: { decision: Decision; onDone: (q: Quadran
 
   const back = () => {
     setErrors({})
+    setDir(-1)
     setStep(step - 1)
   }
 
@@ -134,11 +142,13 @@ function Stepper({ decision, onDone }: { decision: Decision; onDone: (q: Quadran
     }
   }
 
+  const headingClass = 'font-display text-[34px] leading-[1.05] outline-none sm:text-[44px]'
+
   return (
-    <div className="mx-auto max-w-2xl" onKeyDown={onKeyDown}>
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted">
-          Reviewing a decision from {format(parseISO(decision.createdAt), 'd MMMM yyyy')}
+    <div className="mx-auto max-w-3xl" onKeyDown={onKeyDown}>
+      <div className="mb-8 flex items-center justify-between gap-3">
+        <p className="eyebrow">
+          Reviewing an entry from {format(parseISO(decision.createdAt), 'd MMMM yyyy')}
         </p>
         <Button variant="ghost" size="sm" onClick={() => navigate(`/decisions/${decision.id}`)}>
           <X aria-hidden />
@@ -147,203 +157,220 @@ function Stepper({ decision, onDone }: { decision: Decision; onDone: (q: Quadran
       </div>
 
       {/* Stepper + progress */}
-      <ol
-        className="mb-2 grid grid-cols-3 gap-2 text-xs font-medium sm:text-sm"
-        aria-label="Review steps"
-      >
+      <ol className="grid grid-cols-3 gap-3" aria-label="Review steps">
         {STEPS.map((label, i) => (
-          <li
-            key={label}
-            aria-current={i === step ? 'step' : undefined}
-            className={cn('flex items-center gap-1.5', i <= step ? 'text-ink' : 'text-faint')}
-          >
-            <span
+          <li key={label} aria-current={i === step ? 'step' : undefined}>
+            <div className="relative h-1 overflow-hidden rounded-full bg-line" aria-hidden>
+              <motion.div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-accent to-accent-bright"
+                initial={false}
+                animate={{ width: i <= step ? '100%' : '0%' }}
+                transition={{ duration: 0.6, ease: EASE }}
+              />
+            </div>
+            <p
               className={cn(
-                'tabular flex size-5 shrink-0 items-center justify-center rounded-full border text-[11px]',
-                i < step && 'border-accent bg-accent text-accent-ink',
-                i === step && 'border-accent text-accent-text',
-                i > step && 'border-line-strong',
+                'mt-3 flex items-center gap-2 text-xs font-medium transition-colors duration-300 sm:text-sm',
+                i <= step ? 'text-ink' : 'text-faint',
               )}
             >
-              {i < step ? <Check className="size-3" aria-hidden /> : i + 1}
-            </span>
-            <span className="truncate">
-              {label}
-              {i < step && <span className="sr-only"> (done)</span>}
-            </span>
+              <span className="tabular font-mono text-[11px] text-faint">0{i + 1}</span>
+              <span className="truncate">{label}</span>
+              {i < step && (
+                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING}>
+                  <Check className="size-3.5 text-accent-text" aria-hidden />
+                  <span className="sr-only">(done)</span>
+                </motion.span>
+              )}
+            </p>
           </li>
         ))}
       </ol>
-      <div
-        className="mb-6 h-1 overflow-hidden rounded-full bg-surface-2"
-        role="progressbar"
-        aria-label="Review progress"
-        aria-valuemin={1}
-        aria-valuemax={3}
-        aria-valuenow={step + 1}
-        aria-valuetext={`Step ${step + 1} of 3`}
-      >
-        <motion.div
-          className="h-full rounded-full bg-accent"
-          animate={{ width: `${((step + 1) / 3) * 100}%` }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        />
-      </div>
+      <p className="sr-only" aria-live="polite">
+        Step {step + 1} of 3: {STEPS[step]}
+      </p>
 
-      <Card className="p-5 sm:p-7">
-        {step === 0 && (
-          <section aria-labelledby={`${uid}-h`}>
-            <h1
-              id={`${uid}-h`}
-              ref={headingRef}
-              tabIndex={-1}
-              className="font-display text-2xl leading-tight font-medium outline-none sm:text-3xl"
+      <Card className="mt-8 overflow-hidden shadow-lift">
+        <div className="relative p-6 sm:p-10">
+          <AnimatePresence mode="wait" initial={false} custom={dir}>
+            <motion.section
+              key={step}
+              custom={dir}
+              variants={{
+                enter: (d: number) => ({ x: reduced ? 0 : d * 48, opacity: 0 }),
+                center: { x: 0, opacity: 1 },
+                exit: (d: number) => ({ x: reduced ? 0 : d * -48, opacity: 0 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.35, ease: EASE }}
+              aria-labelledby={`${uid}-h`}
             >
-              {decision.title}
-            </h1>
-            <p className="mt-2 text-sm text-muted">
-              {decision.category} · {decision.stakes} stakes
-              {decision.mood && ` · felt ${decision.mood.toLowerCase()}`}
-            </p>
-            <dl className="mt-6 space-y-5">
-              <ReadOnly label="You expected">
-                <p className="font-display text-lg leading-snug">{decision.expectedOutcome}</p>
-              </ReadOnly>
-              <ReadOnly label="Your confidence">
-                <p>
-                  <span className="tabular font-display text-2xl font-medium">
-                    {decision.confidence}%
-                  </span>
-                  <span className="ml-2 text-muted">{confidenceLabel(decision.confidence)}</span>
-                </p>
-              </ReadOnly>
-              {decision.chosen && <ReadOnly label="You chose">{decision.chosen}</ReadOnly>}
-              {decision.reasoning && (
-                <ReadOnly label="Because">
-                  <p className="leading-relaxed text-muted">{decision.reasoning}</p>
-                </ReadOnly>
+              {step === 0 && (
+                <>
+                  <p className="eyebrow">
+                    {decision.category} / {decision.stakes} stakes
+                    {decision.mood && ` / felt ${decision.mood.toLowerCase()}`}
+                  </p>
+                  <h1
+                    id={`${uid}-h`}
+                    ref={headingRef}
+                    tabIndex={-1}
+                    className={cn(headingClass, 'mt-3')}
+                  >
+                    {decision.title}
+                  </h1>
+                  <dl className="mt-8 space-y-7">
+                    <ReadOnly label="You expected">
+                      <p className="border-l-2 border-accent pl-4 font-display text-[22px] leading-snug italic sm:text-2xl">
+                        {decision.expectedOutcome}
+                      </p>
+                    </ReadOnly>
+                    <ReadOnly label="Your confidence">
+                      <div className="flex items-center gap-4">
+                        <span className="tabular font-display text-5xl leading-none">
+                          {decision.confidence}%
+                        </span>
+                        <div className="flex-1">
+                          <p className="text-sm text-muted">
+                            {confidenceLabel(decision.confidence)}
+                          </p>
+                          <ConfidenceMeter value={decision.confidence} className="mt-2 max-w-60" />
+                        </div>
+                      </div>
+                    </ReadOnly>
+                    {decision.chosen && <ReadOnly label="You chose">{decision.chosen}</ReadOnly>}
+                    {decision.reasoning && (
+                      <ReadOnly label="Because">
+                        <p className="leading-relaxed text-muted">{decision.reasoning}</p>
+                      </ReadOnly>
+                    )}
+                  </dl>
+                  <p className="mt-8 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">
+                    Read it as it was written. Try not to rewrite what you believed then.
+                  </p>
+                </>
               )}
-            </dl>
-            <p className="mt-6 rounded-lg bg-surface-2 p-3 text-sm text-muted">
-              Read it as it was written. Try not to rewrite what you believed then.
-            </p>
-          </section>
-        )}
 
-        {step === 1 && (
-          <section aria-labelledby={`${uid}-h`} className="space-y-6">
-            <h1
-              id={`${uid}-h`}
-              ref={headingRef}
-              tabIndex={-1}
-              className="font-display text-2xl font-medium outline-none"
-            >
-              What actually happened?
-            </h1>
-            <Field
-              label="In a sentence or two"
-              htmlFor={`${uid}-what`}
-              error={errors.whatHappened}
-              errorId={`${uid}-what-err`}
-            >
-              <Textarea
-                id={`${uid}-what`}
-                value={draft.whatHappened}
-                onChange={(e) => update({ whatHappened: e.target.value })}
-                rows={3}
-                autoFocus
-                aria-invalid={Boolean(errors.whatHappened)}
-                aria-describedby={errors.whatHappened ? `${uid}-what-err` : undefined}
-              />
-            </Field>
-            <div>
-              <p id={`${uid}-happened`} className="mb-1.5 text-sm font-medium">
-                Did the expected outcome happen?
-              </p>
-              <p className="mb-3 text-sm text-muted">“{decision.expectedOutcome}”</p>
-              <ChoiceGroup
-                value={draft.happened}
-                onChange={(happened) => update({ happened })}
-                choices={HAPPENED_CHOICES}
-                ariaLabelledBy={`${uid}-happened`}
-                ariaDescribedBy={errors.happened ? `${uid}-happened-err` : undefined}
-                invalid={Boolean(errors.happened)}
-                className="grid-cols-3"
-              />
-              {errors.happened && (
-                <p
-                  id={`${uid}-happened-err`}
-                  role="alert"
-                  className="mt-1.5 text-sm font-medium text-danger"
-                >
-                  {errors.happened}
-                </p>
+              {step === 1 && (
+                <div className="space-y-8">
+                  <h1 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className={headingClass}>
+                    What actually <em className="text-accent-text">happened?</em>
+                  </h1>
+                  <Field
+                    label="In a sentence or two"
+                    htmlFor={`${uid}-what`}
+                    error={errors.whatHappened}
+                    errorId={`${uid}-what-err`}
+                  >
+                    <Textarea
+                      id={`${uid}-what`}
+                      value={draft.whatHappened}
+                      onChange={(e) => update({ whatHappened: e.target.value })}
+                      rows={3}
+                      autoFocus
+                      aria-invalid={Boolean(errors.whatHappened)}
+                      aria-describedby={errors.whatHappened ? `${uid}-what-err` : undefined}
+                    />
+                  </Field>
+                  <div>
+                    <p id={`${uid}-happened`} className="text-sm font-medium">
+                      Did the expected outcome happen?
+                    </p>
+                    <p className="mt-1 mb-4 font-display text-lg text-muted italic">
+                      “{decision.expectedOutcome}”
+                    </p>
+                    <ChoiceGroup
+                      value={draft.happened}
+                      onChange={(happened) => update({ happened })}
+                      choices={HAPPENED_CHOICES}
+                      ariaLabelledBy={`${uid}-happened`}
+                      ariaDescribedBy={errors.happened ? `${uid}-happened-err` : undefined}
+                      invalid={Boolean(errors.happened)}
+                      className="grid-cols-3"
+                      itemClassName="min-h-16"
+                    />
+                    {errors.happened && (
+                      <p
+                        id={`${uid}-happened-err`}
+                        role="alert"
+                        className="mt-2 text-sm font-medium text-danger"
+                      >
+                        {errors.happened}
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
-            </div>
-          </section>
-        )}
 
-        {step === 2 && (
-          <section aria-labelledby={`${uid}-h`} className="space-y-7">
-            <div>
-              <h1
-                id={`${uid}-h`}
-                ref={headingRef}
-                tabIndex={-1}
-                className="font-display text-2xl font-medium outline-none"
-              >
-                Separate luck from judgment
-              </h1>
-              <p className="mt-1.5 text-sm text-muted">
-                Rate these on their own. A good call can go badly, and a bad one can get lucky.
-              </p>
-            </div>
-            <RatingQuestion
-              id={`${uid}-outcome`}
-              label="How good was the outcome?"
-              hint="However it came about."
-              value={draft.outcomeQuality}
-              onChange={(outcomeQuality) => update({ outcomeQuality })}
-              error={errors.outcomeQuality}
-            />
-            <RatingQuestion
-              id={`${uid}-decision`}
-              label="How good was the decision?"
-              hint="Given only what you knew at the time."
-              value={draft.decisionQuality}
-              onChange={(decisionQuality) => update({ decisionQuality })}
-              error={errors.decisionQuality}
-            />
-            <Field label="Lesson learned" htmlFor={`${uid}-lesson`} optional>
-              <Input
-                id={`${uid}-lesson`}
-                value={draft.lesson}
-                onChange={(e) => update({ lesson: e.target.value })}
-                placeholder="One line for next time"
-                autoComplete="off"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    next()
-                  }
-                }}
-              />
-            </Field>
-          </section>
-        )}
+              {step === 2 && (
+                <div className="space-y-9">
+                  <div>
+                    <h1 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className={headingClass}>
+                      Separate luck from <em className="text-accent-text">judgment.</em>
+                    </h1>
+                    <p className="mt-3 text-muted">
+                      Rate these on their own. A good call can go badly, and a bad one can get
+                      lucky.
+                    </p>
+                  </div>
+                  <RatingQuestion
+                    id={`${uid}-outcome`}
+                    label="How good was the outcome?"
+                    hint="However it came about."
+                    value={draft.outcomeQuality}
+                    onChange={(outcomeQuality) => update({ outcomeQuality })}
+                    error={errors.outcomeQuality}
+                  />
+                  <RatingQuestion
+                    id={`${uid}-decision`}
+                    label="How good was the decision?"
+                    hint="Given only what you knew at the time."
+                    value={draft.decisionQuality}
+                    onChange={(decisionQuality) => update({ decisionQuality })}
+                    error={errors.decisionQuality}
+                  />
+                  <Field label="Lesson learned" htmlFor={`${uid}-lesson`} optional>
+                    <Input
+                      id={`${uid}-lesson`}
+                      value={draft.lesson}
+                      onChange={(e) => update({ lesson: e.target.value })}
+                      placeholder="One line for next time"
+                      autoComplete="off"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          next()
+                        }
+                      }}
+                    />
+                  </Field>
+                </div>
+              )}
+            </motion.section>
+          </AnimatePresence>
+        </div>
 
-        <div className="mt-8 flex items-center justify-between gap-3 border-t border-line pt-5">
+        <div className="flex items-center justify-between gap-3 border-t border-line bg-surface-2/50 px-6 py-4 sm:px-10">
           {step > 0 ? (
             <Button variant="ghost" onClick={back}>
               <ArrowLeft aria-hidden />
               Back
             </Button>
           ) : (
-            <span />
+            <span className="eyebrow hidden sm:block">⌘ + Enter to continue</span>
           )}
-          <Button size="lg" onClick={next} autoFocus={step === 0}>
+          <Button size="lg" onClick={next} autoFocus={step === 0} className="group ml-auto">
             {step === 0 ? 'Start review' : step === 1 ? 'Continue' : 'Save review'}
-            {step < 2 ? <ArrowRight aria-hidden /> : <Check aria-hidden />}
+            {step < 2 ? (
+              <ArrowRight
+                className="transition-transform duration-300 group-hover:translate-x-1"
+                aria-hidden
+              />
+            ) : (
+              <Check aria-hidden />
+            )}
           </Button>
         </div>
       </Card>
@@ -354,8 +381,8 @@ function Stepper({ decision, onDone }: { decision: Decision; onDone: (q: Quadran
 function ReadOnly({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-medium tracking-wide text-faint uppercase">{label}</dt>
-      <dd className="mt-1">{children}</dd>
+      <dt className="eyebrow">{label}</dt>
+      <dd className="mt-2">{children}</dd>
     </div>
   )
 }
@@ -380,7 +407,7 @@ function RatingQuestion({
       <p id={id} className="text-sm font-medium">
         {label}
       </p>
-      <p className="mb-3 text-sm text-muted">{hint}</p>
+      <p className="mb-4 text-sm text-muted">{hint}</p>
       <ChoiceGroup
         value={value ? String(value) : undefined}
         onChange={(v) => onChange(Number(v) as Rating)}
@@ -388,15 +415,42 @@ function RatingQuestion({
         ariaLabelledBy={id}
         ariaDescribedBy={error ? `${id}-err` : undefined}
         invalid={Boolean(error)}
-        className="grid-cols-5 gap-1.5 sm:gap-2"
-        itemClassName="px-1"
+        className="grid-cols-5 gap-1.5 sm:gap-2.5"
+        itemClassName="min-h-16 px-1"
       />
       {error && (
-        <p id={`${id}-err`} role="alert" className="mt-1.5 text-sm font-medium text-danger">
+        <p id={`${id}-err`} role="alert" className="mt-2 text-sm font-medium text-danger">
           {error}
         </p>
       )}
     </div>
+  )
+}
+
+/** A one-off ring of dots bursting from the verdict. */
+function Burst() {
+  const reduced = useReducedMotion()
+  if (reduced) return null
+  const dots = Array.from({ length: 14 }, (_, i) => {
+    const angle = (i / 14) * Math.PI * 2
+    const distance = 90 + (i % 3) * 26
+    return { x: Math.cos(angle) * distance, y: Math.sin(angle) * distance * 0.6, i }
+  })
+  return (
+    <span aria-hidden className="pointer-events-none absolute top-1/2 left-1/2">
+      {dots.map((d) => (
+        <motion.span
+          key={d.i}
+          className={cn(
+            'absolute size-2 rounded-full',
+            d.i % 3 === 0 ? 'bg-accent' : d.i % 3 === 1 ? 'bg-accent-bright' : 'bg-ink/40',
+          )}
+          initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
+          animate={{ x: d.x, y: d.y, scale: [0, 1.2, 0.4], opacity: [1, 1, 0] }}
+          transition={{ duration: 1.1, ease: EASE, delay: 0.45 }}
+        />
+      ))}
+    </span>
   )
 }
 
@@ -413,36 +467,58 @@ function ResultCard({
   const decisions = useDecisions((s) => s.decisions)
   const nextDue = useMemo(() => dueQueue(decisions)[0], [decisions])
   const headingRef = useRef<HTMLHeadingElement>(null)
-  useEffect(() => headingRef.current?.focus(), [])
+  useEffect(() => headingRef.current?.focus({ preventScroll: true }), [])
 
   return (
-    <div className="mx-auto max-w-xl">
+    <div className="mx-auto max-w-2xl">
       <motion.div
-        initial={reduced ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        initial={reduced ? false : { opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: EASE }}
       >
-        <Card className="p-6 text-center sm:p-8">
-          <p className="text-sm text-muted">Review saved</p>
-          <p className="mt-1 text-sm text-muted">{title}</p>
-          <motion.h1
-            ref={headingRef}
-            tabIndex={-1}
-            initial={reduced ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="mt-5 font-display text-4xl font-medium text-accent-text outline-none sm:text-5xl"
+        <Card className="relative overflow-hidden p-8 text-center shadow-lift sm:p-12">
+          <span
+            aria-hidden
+            className="absolute -top-24 left-1/2 size-72 -translate-x-1/2 rounded-full bg-accent-bright/20 blur-3xl"
+          />
+          <p className="eyebrow relative">Review saved</p>
+          <p className="relative mx-auto mt-2 max-w-md text-sm text-muted">{title}</p>
+          <div className="relative mt-8">
+            <Burst />
+            <motion.h1
+              ref={headingRef}
+              tabIndex={-1}
+              initial={reduced ? false : { opacity: 0, scale: 0.85, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+              transition={{ delay: 0.35, duration: 0.8, ease: EASE }}
+              className="font-display text-[64px] leading-none text-accent-text italic outline-none sm:text-[88px]"
+            >
+              {quadrant}
+            </motion.h1>
+          </div>
+          <motion.p
+            initial={reduced ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.6, ease: EASE }}
+            className="relative mx-auto mt-5 max-w-sm text-[17px] leading-relaxed text-muted"
           >
-            {quadrant}
-          </motion.h1>
-          <p className="mx-auto mt-3 max-w-sm text-muted">{QUADRANT_BLURB[quadrant]}</p>
-          <QuadrantGrid active={quadrant} className="mx-auto mt-7 max-w-sm text-left" />
-          <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            {QUADRANT_BLURB[quadrant]}
+          </motion.p>
+          <QuadrantGrid active={quadrant} className="relative mx-auto mt-10 max-w-sm text-left" />
+          <motion.div
+            initial={reduced ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 0.6, ease: EASE }}
+            className="relative mt-10 flex flex-col gap-2.5 sm:flex-row sm:justify-center"
+          >
             {nextDue ? (
-              <Button asChild size="lg">
+              <Button asChild size="lg" className="group">
                 <Link to={`/decisions/${nextDue.id}/review`}>
                   Next review
-                  <ArrowRight aria-hidden />
+                  <ArrowRight
+                    className="transition-transform duration-300 group-hover:translate-x-1"
+                    aria-hidden
+                  />
                 </Link>
               </Button>
             ) : (
@@ -453,7 +529,7 @@ function ResultCard({
             <Button asChild variant="secondary" size="lg">
               <Link to={`/decisions/${decisionId}`}>See then vs now</Link>
             </Button>
-          </div>
+          </motion.div>
         </Card>
       </motion.div>
     </div>
@@ -462,13 +538,13 @@ function ResultCard({
 
 function AlreadyReviewed({ decision }: { decision: Decision }) {
   return (
-    <Card className="mx-auto max-w-xl p-8 text-center">
-      <h1 className="font-display text-2xl font-medium">Already reviewed</h1>
-      <p className="mt-2 text-muted">
+    <Card className="mx-auto max-w-xl p-10 text-center">
+      <h1 className="font-display text-4xl">Already reviewed</h1>
+      <p className="mt-3 text-muted">
         You closed the loop on “{decision.title}” on{' '}
         {format(parseISO(decision.review!.reviewedAt), 'd MMMM')}.
       </p>
-      <Button asChild className="mt-6">
+      <Button asChild className="mt-7">
         <Link to={`/decisions/${decision.id}`}>See then vs now</Link>
       </Button>
     </Card>

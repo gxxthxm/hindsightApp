@@ -2,10 +2,10 @@ import type { ComponentProps } from 'react'
 import { cn } from '@/lib/utils'
 
 const fieldBase =
-  'w-full rounded-lg border border-line bg-surface px-3 text-[15px] text-ink placeholder:text-faint transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent focus-visible:border-transparent aria-[invalid=true]:border-danger disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted'
+  'w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] shadow-[inset_0_1px_2px_rgb(0_0_0/0.03)] text-ink placeholder:text-faint transition-colors hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent focus-visible:border-transparent aria-[invalid=true]:border-danger disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted'
 
 export function Input({ className, ...props }: ComponentProps<'input'>) {
-  return <input className={cn(fieldBase, 'h-11', className)} {...props} />
+  return <input className={cn(fieldBase, 'h-12', className)} {...props} />
 }
 
 export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {

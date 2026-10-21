@@ -47,9 +47,9 @@ export function ChoiceGroup<V extends string>({
           key={c.value}
           value={c.value}
           className={cn(
-            'group flex min-h-11 flex-col items-center justify-center rounded-xl border px-2 py-2 text-center transition-colors',
+            'press group flex min-h-11 flex-col items-center justify-center rounded-2xl border px-2 py-2.5 text-center transition-all duration-200',
             'border-line bg-surface text-ink hover:border-line-strong',
-            'data-[state=checked]:border-accent data-[state=checked]:bg-accent-soft data-[state=checked]:text-accent-text',
+            'data-[state=checked]:border-accent data-[state=checked]:bg-accent-soft data-[state=checked]:text-accent-text data-[state=checked]:shadow-[0_0_0_3px_var(--accent-soft)]',
             invalid && 'border-danger/60',
             itemClassName,
           )}

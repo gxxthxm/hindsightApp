@@ -10,13 +10,12 @@ import {
   startOfDay,
 } from 'date-fns'
 import { ChevronDown, Lock, Plus, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Chip } from '@/components/ui/chip'
 import { Field } from '@/components/ui/field'
 import { Input, Textarea } from '@/components/ui/input'
-import { Slider } from '@/components/ui/slider'
-import { CONFIDENCE_MAX, CONFIDENCE_MIN, CONFIDENCE_STEP, confidenceLabel } from '@/lib/confidence'
 import {
   CATEGORIES,
   MOODS,
@@ -26,7 +25,9 @@ import {
   type Mood,
   type Stakes,
 } from '@/lib/types'
+import { EASE } from '@/lib/motion'
 import { cn } from '@/lib/utils'
+import { ConfidenceDial } from './ConfidenceDial'
 import type { DecisionInput } from '@/store/decisions'
 
 type Preset = '2w' | '1m' | '3m' | '6m' | 'custom'
@@ -164,7 +165,7 @@ export function DecisionForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} onKeyDown={submitOnModEnter} noValidate className="space-y-6">
+    <form onSubmit={handleSubmit} onKeyDown={submitOnModEnter} noValidate className="space-y-8">
       {/* ── Required ───────────────────────────────────────────── */}
       <Field
         label="What are you deciding?"
@@ -186,7 +187,7 @@ export function DecisionForm({
           maxLength={140}
           aria-invalid={Boolean(errors.title)}
           aria-describedby={errors.title ? `${ids.title}-err` : undefined}
-          className="font-display text-lg"
+          className="h-14 font-display text-[24px]"
         />
       </Field>
 
@@ -213,34 +214,12 @@ export function DecisionForm({
         />
       </Field>
 
-      <div>
-        <div className="mb-1 flex items-end justify-between gap-3">
-          <span id={ids.confidence} className="text-sm font-medium">
-            How sure are you?
-          </span>
-          <p className="tabular text-right" aria-hidden>
-            <span className="font-display text-3xl font-medium text-ink">{confidence}%</span>
-            <span className="ml-2 text-sm font-medium text-accent-text">
-              {confidenceLabel(confidence)}
-            </span>
-          </p>
-        </div>
-        <Slider
-          min={CONFIDENCE_MIN}
-          max={CONFIDENCE_MAX}
-          step={CONFIDENCE_STEP}
-          value={[confidence]}
-          onValueChange={([v]) => setConfidence(v)}
-          thumbLabel="Confidence"
-          valueText={`${confidence}%, ${confidenceLabel(confidence)}`}
-          aria-labelledby={ids.confidence}
-          disabled={locked}
-        />
-        <div className="mt-1 flex justify-between text-xs text-faint" aria-hidden>
-          <span>50% coin flip</span>
-          <span>100% certain</span>
-        </div>
-      </div>
+      <ConfidenceDial
+        value={confidence}
+        onChange={setConfidence}
+        labelId={ids.confidence}
+        disabled={locked}
+      />
 
       {locked && (
         <p className="flex items-start gap-2 rounded-lg bg-surface-2 p-3 text-sm text-muted">
@@ -259,11 +238,17 @@ export function DecisionForm({
         >
           <div className="flex flex-wrap gap-2">
             {PRESETS.map((p) => (
-              <Chip key={p.id} selected={preset === p.id} onClick={() => setPreset(p.id)}>
+              <Chip
+                key={p.id}
+                layoutId={`${uid}-preset`}
+                selected={preset === p.id}
+                onClick={() => setPreset(p.id)}
+              >
                 {p.label}
               </Chip>
             ))}
             <Chip
+              layoutId={`${uid}-preset`}
               selected={preset === 'custom'}
               onClick={() => {
                 setPreset('custom')
@@ -309,7 +294,12 @@ export function DecisionForm({
         <Field as="fieldset" label="Category" className="sm:col-span-2">
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
-              <Chip key={c} selected={category === c} onClick={() => setCategory(c)}>
+              <Chip
+                key={c}
+                layoutId={`${uid}-category`}
+                selected={category === c}
+                onClick={() => setCategory(c)}
+              >
                 {c}
               </Chip>
             ))}
@@ -318,7 +308,12 @@ export function DecisionForm({
         <Field as="fieldset" label="Stakes">
           <div className="flex flex-wrap gap-2">
             {STAKES.map((s) => (
-              <Chip key={s} selected={stakes === s} onClick={() => setStakes(s)}>
+              <Chip
+                key={s}
+                layoutId={`${uid}-stakes`}
+                selected={stakes === s}
+                onClick={() => setStakes(s)}
+              >
                 {s}
               </Chip>
             ))}
@@ -329,6 +324,7 @@ export function DecisionForm({
             {MOODS.map((m) => (
               <Chip
                 key={m}
+                layoutId={`${uid}-mood`}
                 selected={mood === m}
                 onClick={() => setMood(mood === m ? undefined : m)}
               >
@@ -340,117 +336,132 @@ export function DecisionForm({
       </div>
 
       {/* ── More detail ────────────────────────────────────────── */}
-      <div className="rounded-xl border border-line">
+      <div className="overflow-hidden rounded-2xl border border-line">
         <button
           type="button"
           aria-expanded={showMore}
           aria-controls={ids.more}
           onClick={() => setShowMore(!showMore)}
-          className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium hover:bg-surface-2"
+          className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left text-sm font-medium transition-colors hover:bg-surface-2"
         >
           <span>
             Context, options and reasoning <span className="font-normal text-faint">optional</span>
           </span>
           <ChevronDown
-            className={cn('size-4 text-muted transition-transform', showMore && 'rotate-180')}
+            className={cn(
+              'size-4 text-muted transition-transform duration-300',
+              showMore && 'rotate-180',
+            )}
             aria-hidden
           />
         </button>
-        <div
-          id={ids.more}
-          hidden={!showMore}
-          className="space-y-5 border-t border-line px-4 pt-4 pb-5"
-        >
-          <Field
-            label="Context"
-            htmlFor={ids.context}
-            hint="What’s going on? What constraints are you under?"
-          >
-            <Textarea
-              id={ids.context}
-              value={context}
-              onChange={(e) => setContext(e.target.value)}
-              rows={2}
-            />
-          </Field>
+        <AnimatePresence initial={false}>
+          {showMore && (
+            <motion.div
+              id={ids.more}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.4, ease: EASE }}
+            >
+              <div className="space-y-6 border-t border-line px-5 pt-5 pb-6">
+                <Field
+                  label="Context"
+                  htmlFor={ids.context}
+                  hint="What’s going on? What constraints are you under?"
+                >
+                  <Textarea
+                    id={ids.context}
+                    value={context}
+                    onChange={(e) => setContext(e.target.value)}
+                    rows={2}
+                  />
+                </Field>
 
-          <Field label="Options considered" htmlFor={ids.option}>
-            <div className="flex gap-2">
-              <Input
-                id={ids.option}
-                value={optionDraft}
-                onChange={(e) => setOptionDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
-                    e.preventDefault()
-                    addOption()
-                  }
-                }}
-                placeholder="Add an option and press Enter"
-                className="h-10 text-sm"
-                autoComplete="off"
-              />
-              <Button
-                variant="secondary"
-                onClick={addOption}
-                aria-label="Add option"
-                className="px-3"
-              >
-                <Plus aria-hidden />
-                <span className="hidden sm:inline">Add</span>
-              </Button>
-            </div>
-            {options.length > 0 && (
-              <ul className="mt-2.5 flex flex-wrap gap-2" aria-label="Options">
-                {options.map((o) => (
-                  <li
-                    key={o}
-                    className="inline-flex h-8 max-w-full items-center gap-1 rounded-full border border-line bg-surface-2 pr-1 pl-3 text-sm"
-                  >
-                    <span className="truncate">{o}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeOption(o)}
-                      aria-label={`Remove option: ${o}`}
-                      className="rounded-full p-1 text-muted hover:bg-line hover:text-ink"
+                <Field label="Options considered" htmlFor={ids.option}>
+                  <div className="flex gap-2">
+                    <Input
+                      id={ids.option}
+                      value={optionDraft}
+                      onChange={(e) => setOptionDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
+                          e.preventDefault()
+                          addOption()
+                        }
+                      }}
+                      placeholder="Add an option and press Enter"
+                      className="h-10 text-sm"
+                      autoComplete="off"
+                    />
+                    <Button
+                      variant="secondary"
+                      onClick={addOption}
+                      aria-label="Add option"
+                      className="px-3"
                     >
-                      <X className="size-3.5" aria-hidden />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Field>
+                      <Plus aria-hidden />
+                      <span className="hidden sm:inline">Add</span>
+                    </Button>
+                  </div>
+                  {options.length > 0 && (
+                    <ul className="mt-2.5 flex flex-wrap gap-2" aria-label="Options">
+                      {options.map((o) => (
+                        <motion.li
+                          key={o}
+                          layout
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          className="inline-flex h-8 max-w-full items-center gap-1 rounded-full border border-line bg-surface-2 pr-1 pl-3 text-sm"
+                        >
+                          <span className="truncate">{o}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeOption(o)}
+                            aria-label={`Remove option: ${o}`}
+                            className="rounded-full p-1 text-muted hover:bg-line hover:text-ink"
+                          >
+                            <X className="size-3.5" aria-hidden />
+                          </button>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  )}
+                </Field>
 
-          {options.length > 0 && (
-            <Field as="fieldset" label="Which one did you choose?">
-              <div className="flex flex-wrap gap-2">
-                {options.map((o) => (
-                  <Chip
-                    key={o}
-                    selected={chosen === o}
-                    onClick={() => setChosen(chosen === o ? undefined : o)}
-                  >
-                    <span className="max-w-60 truncate">{o}</span>
-                  </Chip>
-                ))}
+                {options.length > 0 && (
+                  <Field as="fieldset" label="Which one did you choose?">
+                    <div className="flex flex-wrap gap-2">
+                      {options.map((o) => (
+                        <Chip
+                          key={o}
+                          selected={chosen === o}
+                          onClick={() => setChosen(chosen === o ? undefined : o)}
+                        >
+                          <span className="max-w-60 truncate">{o}</span>
+                        </Chip>
+                      ))}
+                    </div>
+                  </Field>
+                )}
+
+                <Field
+                  label="Reasoning"
+                  htmlFor={ids.reasoning}
+                  hint="Why this, and not the alternatives?"
+                >
+                  <Textarea
+                    id={ids.reasoning}
+                    value={reasoning}
+                    onChange={(e) => setReasoning(e.target.value)}
+                    rows={3}
+                  />
+                </Field>
               </div>
-            </Field>
+            </motion.div>
           )}
-
-          <Field
-            label="Reasoning"
-            htmlFor={ids.reasoning}
-            hint="Why this, and not the alternatives?"
-          >
-            <Textarea
-              id={ids.reasoning}
-              value={reasoning}
-              onChange={(e) => setReasoning(e.target.value)}
-              rows={3}
-            />
-          </Field>
-        </div>
+        </AnimatePresence>
       </div>
 
       <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-end">

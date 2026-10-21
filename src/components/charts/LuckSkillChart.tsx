@@ -23,8 +23,13 @@ interface Point {
   quadrant: Quadrant
 }
 
-const TICK = { fill: 'var(--muted)', fontSize: 12 }
-const AREA_LABEL = { fill: 'var(--muted)', fontSize: 12, fontWeight: 500 }
+const TICK = { fill: 'var(--faint)', fontSize: 11, fontFamily: 'var(--font-mono)' }
+const AREA_LABEL = {
+  fill: 'var(--muted)',
+  fontSize: 15,
+  fontFamily: 'var(--font-serif)',
+  fontStyle: 'italic',
+}
 
 /** Every reviewed decision by decision quality (x) × outcome quality (y), split at 3. */
 export function LuckSkillChart({ decisions }: { decisions: ReviewedDecision[] }) {
@@ -123,8 +128,8 @@ export function LuckSkillChart({ decisions }: { decisions: ReviewedDecision[] })
                 const p = payload?.[0]?.payload as Point | undefined
                 if (!active || !p) return null
                 return (
-                  <div className="max-w-64 rounded-lg border border-line bg-surface px-3 py-2 text-sm shadow-card">
-                    <p className="font-display leading-snug">{p.title}</p>
+                  <div className="max-w-64 rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm shadow-lift">
+                    <p className="font-display text-lg leading-snug">{p.title}</p>
                     <p className="mt-1 text-muted">
                       {p.quadrant} · decision {p.decisionQuality}/5 · outcome {p.outcomeQuality}/5
                     </p>
@@ -138,7 +143,9 @@ export function LuckSkillChart({ decisions }: { decisions: ReviewedDecision[] })
               fillOpacity={0.85}
               stroke="var(--surface)"
               strokeWidth={1.5}
-              isAnimationActive={false}
+              animationBegin={300}
+              animationDuration={900}
+              animationEasing="ease-out"
               cursor="pointer"
               onClick={(data) => {
                 const id = (data as unknown as { payload?: Point }).payload?.id

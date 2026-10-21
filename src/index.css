@@ -4,48 +4,60 @@
 
 /* Quiet editorial notebook: warm paper, ink, one deep-teal accent. */
 :root {
-  --bg: #faf8f3;
-  --surface: #ffffff;
-  --surface-2: #f3f0e8;
-  --ink: #1d1c19;
-  --muted: #5f5b53;
-  --faint: #736e66;
-  --line: #e6e1d6;
-  --line-strong: #d3ccbe;
-  --accent: #0f6b6b;
-  --accent-hover: #0b5858;
+  --bg: #f6f3ec;
+  --surface: #fffdf8;
+  --surface-2: #efebe1;
+  --ink: #191813;
+  --muted: #5a564d;
+  --faint: #6b665d;
+  --line: #e3ddd0;
+  --line-strong: #cfc7b6;
+  --accent: #0e6b66;
+  --accent-hover: #0a5753;
+  --accent-bright: #179a8f;
   --accent-ink: #ffffff;
-  --accent-soft: #e2efec;
-  --accent-text: #0c5f5f;
-  --good: #47714b;
-  --good-soft: #e7eee2;
-  --danger: #a8402f;
-  --danger-soft: #f6e5e0;
-  --chart-dot: #0f6b6b;
-  --shadow: 0 1px 2px rgb(40 34 20 / 0.05), 0 4px 16px -6px rgb(40 34 20 / 0.1);
+  --accent-soft: #dcede9;
+  --accent-text: #0b5d58;
+  --good: #44704a;
+  --good-soft: #e3ecdd;
+  --danger: #a63f2d;
+  --danger-soft: #f5e2dc;
+  --chart-dot: #0e6b66;
+  --glow: rgb(23 154 143 / 0.13);
+  --grain-opacity: 0.045;
+  --shadow:
+    0 1px 1px rgb(60 45 20 / 0.04), 0 2px 4px rgb(60 45 20 / 0.04),
+    0 12px 32px -12px rgb(60 45 20 / 0.14);
+  --shadow-lift:
+    0 2px 2px rgb(60 45 20 / 0.04), 0 8px 16px -4px rgb(60 45 20 / 0.08),
+    0 28px 56px -20px rgb(60 45 20 / 0.24);
   color-scheme: light;
 }
 
 .dark {
-  --bg: #0d1117;
-  --surface: #151b24;
-  --surface-2: #1b2230;
-  --ink: #e9e6df;
-  --muted: #a3a9b4;
-  --faint: #7c8491;
-  --line: #262e3b;
-  --line-strong: #364152;
-  --accent: #4fb0a6;
-  --accent-hover: #6cc3b9;
-  --accent-ink: #08201e;
-  --accent-soft: #15302f;
-  --accent-text: #74c6bc;
-  --good: #92b98f;
-  --good-soft: #1b2b20;
-  --danger: #e88a78;
+  --bg: #0b0e13;
+  --surface: #12171f;
+  --surface-2: #19202a;
+  --ink: #ede9e0;
+  --muted: #a2a9b4;
+  --faint: #8a919d;
+  --line: #242c38;
+  --line-strong: #344052;
+  --accent: #5cc0b4;
+  --accent-hover: #7dd1c6;
+  --accent-bright: #7fe0d3;
+  --accent-ink: #062320;
+  --accent-soft: #13302e;
+  --accent-text: #7ccfc4;
+  --good: #96bf92;
+  --good-soft: #1a2b1f;
+  --danger: #ec8f7d;
   --danger-soft: #3a1f1b;
-  --chart-dot: #4fb0a6;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -10px rgb(0 0 0 / 0.5);
+  --chart-dot: #5cc0b4;
+  --glow: rgb(92 192 180 / 0.1);
+  --grain-opacity: 0.06;
+  --shadow: 0 1px 1px rgb(0 0 0 / 0.25), 0 12px 32px -12px rgb(0 0 0 / 0.55);
+  --shadow-lift: 0 2px 2px rgb(0 0 0 / 0.3), 0 28px 56px -20px rgb(0 0 0 / 0.7);
   color-scheme: dark;
 }
 
@@ -60,6 +72,7 @@
   --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-bright: var(--accent-bright);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
   --color-accent-text: var(--accent-text);
@@ -68,25 +81,48 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --shadow-card: var(--shadow);
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-serif: 'Fraunces', ui-serif, Georgia, 'Times New Roman', serif;
+  --shadow-lift: var(--shadow-lift);
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
   }
   body {
     @apply bg-bg text-ink font-sans antialiased;
-    font-feature-settings: 'cv11', 'ss01';
+    font-size: 15px;
+    line-height: 1.55;
+    /* A soft accent glow at the top of the page. */
+    background-image:
+      radial-gradient(60rem 28rem at 85% -8rem, var(--glow), transparent 70%),
+      radial-gradient(40rem 20rem at -10% -6rem, var(--glow), transparent 70%);
+    background-repeat: no-repeat;
+  }
+  /* Paper grain over everything, never interactive. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   h1,
   h2,
   h3 {
     text-wrap: balance;
   }
+  p {
+    text-wrap: pretty;
+  }
   ::selection {
     background: var(--accent-soft);
+    color: var(--accent-text);
   }
   :focus-visible {
     outline: 2px solid var(--accent);
@@ -100,22 +136,33 @@
   }
 }
 
+/* Instrument Serif ships one weight: never let the browser fake-bold it. */
 @utility font-display {
   font-family: var(--font-serif);
-  font-optical-sizing: auto;
-  letter-spacing: -0.01em;
+  font-weight: 400 !important;
+  letter-spacing: -0.012em;
+  font-synthesis: none;
+}
+
+/* Small mono label above headings and figures. */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
 }
 
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+@utility press {
+  transition-property: transform, background-color, border-color, color, box-shadow;
+  transition-duration: 160ms;
+  &:active:not(:disabled) {
+    transform: scale(0.97);
   }
 }
 
@@ -132,6 +179,46 @@
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
+    transform: translateY(12px) scale(0.96);
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 12px)) scale(0.97);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes ping-soft {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@keyframes shimmer {
+  from {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(260%) skewX(-18deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
